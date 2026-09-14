@@ -1,0 +1,33 @@
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage*
+htmlcov/
+
+# JavaScript dependencies and builds
+node_modules/
+.next/
+.next-*/
+out/
+*.tsbuildinfo
+
+# Local data, secrets, logs, and recordings
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.log
+.env
+.env.*
+!.env.example
+recordings/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
