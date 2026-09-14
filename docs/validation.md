@@ -2,7 +2,7 @@
 
 The P5 verification run completed on 14 September 2026:
 
-- Backend: `11 passed` with temporary SQLite databases.
+- Backend: `14 passed` with temporary SQLite databases.
 - Frontend helper tests: `2 passed` with Node.js 24.
 - TypeScript: `tsc --noEmit --incremental false` passed.
 - Next.js: `next build` passed and generated a static `/` page.
