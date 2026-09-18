@@ -120,6 +120,138 @@ def test_api_isolated_lifecycle_and_sqlite_persistence(api):
         assert [row[0] for row in db.execute("SELECT event_type FROM events ORDER BY id")] == ["delay", "complete", "skip"]
 
 
+def test_extract_uses_declared_timezone_for_parser_clock(api):
+    client, _db_path, _main = api
+    response = client.post(
+        "/api/tasks/extract",
+        json={
+            "text": "I have class from 9 AM to 12 PM",
+            "now": "2026-09-15T01:00:00+00:00",
+            "timezone": "Asia/Shanghai",
+        },
+    )
+    assert response.status_code == 200, response.text
+    task = response.json()["tasks"][0]
+    assert task["kind"] == "fixed_event"
+    assert task["start_time"] == "2026-09-15T09:00:00+08:00"
+    assert task["end_time"] == "2026-09-15T12:00:00+08:00"
+    assert task["estimated_minutes"] == 180
+    payload = response.json()
+    assert payload["parser_version"] == "multi-event-v1"
+    assert payload["date_context"] is None
+    assert payload["timezone"] == "Asia/Shanghai"
+    assert payload["events"][0]["duration_minutes"] == 180
+    assert payload["events"][0]["validation"] == "ok"
+
+
+def test_extract_rejects_blank_text(api):
+    client, _db_path, _main = api
+    response = client.post("/api/tasks/extract", json={"text": "   "})
+    assert response.status_code == 422
+    assert "text must not be blank" in response.text
+
+
+def test_extract_keeps_known_event_and_residual_actions(api):
+    client, _db_path, _main = api
+    response = client.post(
+        "/api/tasks/extract",
+        json={
+            "text": (
+                "Exam tomorrow: review calculus chapters and submit English assignment. "
+                "Buy shampoo and reply to the important email."
+            ),
+            "now": "2026-09-15T07:00:00+08:00",
+            "timezone": "Asia/Shanghai",
+        },
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert [task["title"] for task in payload["tasks"]] == [
+        "Exam",
+        "Review calculus chapters",
+        "Submit English assignment",
+        "Buy shampoo",
+        "Reply to important email",
+    ]
+    assert payload["date_context"] == "2026-09-16"
+    assert all(task["title"].lower() != "tomorrow" for task in payload["tasks"])
+    assert all(not task["dependency_ids"] for task in payload["tasks"])
+    assert len(payload["events"]) == 5
+
+
+def test_generate_plan_uses_future_task_date_for_default_windows(api):
+    """A future-dated fixed event must not fall back into today's window.
+
+    Omitting ``windows`` exercises the API's default-window construction, which
+    previously used only ``now`` and therefore left tomorrow's event
+    unscheduled.
+    """
+    client, _db_path, _main = api
+    now = datetime(2026, 9, 16, 10, 0, tzinfo=timezone(timedelta(hours=8)))
+    start = now + timedelta(days=1, hours=1)  # tomorrow at 11:00 local time
+    end = start + timedelta(hours=1)
+    response = client.post(
+        "/api/tasks",
+        json={
+            "title": "Class",
+            "kind": "fixed_event",
+            "start_time": start.isoformat(),
+            "end_time": end.isoformat(),
+            "estimated_minutes": 60,
+            "duration_source": "explicit",
+        },
+    )
+    assert response.status_code == 200, response.text
+    task = response.json()
+
+    plan_response = client.post(
+        "/api/plans/generate",
+        json={
+            "task_ids": [task["id"]],
+            "now": now.isoformat(),
+            "timezone": "Asia/Shanghai",
+        },
+    )
+    assert plan_response.status_code == 200, plan_response.text
+    plan = plan_response.json()
+
+    item = next(item for item in plan["items"] if item["task_id"] == task["id"])
+    assert item["state"] == "frozen"
+    assert item["start"] == start.isoformat()
+    assert item["end"] == end.isoformat()
+    assert datetime.fromisoformat(plan["windows"][0]["start"]).date() == start.date()
+    assert not plan["unscheduled"]
+
+
+def test_extract_save_preserves_dependency_ids_for_future_plan(api):
+    client, _db_path, _main = api
+    now = datetime(2026, 9, 16, 9, 0, tzinfo=timezone(timedelta(hours=8)))
+    text = (
+        "Tomorrow I have a doctor's appointment from 3 PM to 4 PM. Before the appointment, I need to "
+        "prepare my documents for 30 minutes and pack my bag, and after the appointment I will buy dinner "
+        "and text my roommate."
+    )
+    extracted = client.post("/api/tasks/extract", json={"text": text, "now": now.isoformat(), "timezone": "Asia/Shanghai"})
+    assert extracted.status_code == 200, extracted.text
+    parsed = extracted.json()
+    saved = []
+    for task in parsed["tasks"]:
+        response = client.post("/api/tasks", json=task)
+        assert response.status_code == 200, response.text
+        saved.append(response.json())
+    ids = {task["id"] for task in saved}
+    assert all(dependency in ids for task in saved for dependency in task["dependency_ids"])
+
+    plan_response = client.post(
+        "/api/plans/generate",
+        json={"task_ids": list(ids), "now": now.isoformat(), "timezone": "Asia/Shanghai"},
+    )
+    assert plan_response.status_code == 200, plan_response.text
+    plan = plan_response.json()
+    assert datetime.fromisoformat(plan["windows"][0]["start"]).date().isoformat() == "2026-09-17"
+    assert not plan["unscheduled"]
+
+
 def test_api_rejects_missing_members_and_invalid_inputs(api):
     client, _db_path, _main = api
     task = create_task(client, "member")
