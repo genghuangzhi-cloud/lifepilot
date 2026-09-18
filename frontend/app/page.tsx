@@ -18,7 +18,9 @@ function timelineDate(plan: Plan) {
   const date = new Date(value);
   const today = new Date();
   if (date.toDateString() === today.toDateString()) return "Today's timeline";
-  return `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} timeline`;
+  const dateLabel = date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+  return `${dateLabel} · ${weekday} timeline`;
 }
 
 export default function Home() {
