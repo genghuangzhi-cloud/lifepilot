@@ -38,6 +38,40 @@ def test_dependencies_are_scheduled_in_order():
     blocks = {item.task_id: item for item in plan.items}
     assert blocks[prerequisite.id].end <= blocks[dependent.id].start
 
+
+def test_completed_prerequisite_is_satisfied_without_rescheduling():
+    now = datetime(2026, 9, 14, 8, tzinfo=timezone.utc)
+    prerequisite = Task(title="review notes", estimated_minutes=30, status="completed")
+    dependent = Task(title="submit assignment", estimated_minutes=30, dependency_ids=[prerequisite.id])
+
+    plan = schedule_tasks(
+        [prerequisite, dependent],
+        [AvailabilityWindow(start=now, end=now + timedelta(hours=1))],
+        now=now,
+    )
+
+    assert [item.task_id for item in plan.items] == [dependent.id]
+    assert not plan.unscheduled
+
+
+def test_skipped_prerequisite_remains_unsatisfied():
+    now = datetime(2026, 9, 14, 8, tzinfo=timezone.utc)
+    prerequisite = Task(title="review notes", estimated_minutes=30, status="skipped")
+    dependent = Task(title="submit assignment", estimated_minutes=30, dependency_ids=[prerequisite.id])
+
+    plan = schedule_tasks(
+        [prerequisite, dependent],
+        [AvailabilityWindow(start=now, end=now + timedelta(hours=1))],
+        now=now,
+    )
+
+    assert not plan.items
+    assert any(
+        entry.task_id == dependent.id
+        and "dependency task is missing or could not be scheduled first" in entry.reason
+        for entry in plan.unscheduled
+    )
+
 def test_planning_does_not_mark_work_as_completed():
     now = datetime(2026, 9, 14, 8, tzinfo=timezone.utc)
     task = Task(title="long", estimated_minutes=120)

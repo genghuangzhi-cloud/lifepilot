@@ -56,6 +56,9 @@ def schedule_tasks(tasks: Iterable[Task], windows: Iterable[AvailabilityWindow],
     all_tasks = list(tasks)
     windows = list(windows)
     task_list = [t for t in all_tasks if t.status not in {"completed", "skipped"}]
+    completed_dependency_ids = {
+        task.id for task in all_tasks if task.status == "completed"
+    }
     fixed_tasks = [t for t in task_list if t.kind == "fixed_event" and t.start_time is not None]
     task_by_id = {t.id: t for t in task_list}
     blocker_counts = {t.id: sum(t.id in other.dependency_ids for other in task_list) for t in task_list}
@@ -132,7 +135,12 @@ def schedule_tasks(tasks: Iterable[Task], windows: Iterable[AvailabilityWindow],
             continue
         remaining = task.effective_remaining()
         original_remaining = remaining
-        missing_dependencies = [dep for dep in task.dependency_ids if dep not in task_by_id or dep not in scheduled_task_ids]
+        missing_dependencies = [
+            dep
+            for dep in task.dependency_ids
+            if dep not in completed_dependency_ids
+            and dep not in scheduled_task_ids
+        ]
         if missing_dependencies:
             unscheduled.append(UnscheduledItem(task_id=task.id, reason="dependency task is missing or could not be scheduled first"))
             continue
