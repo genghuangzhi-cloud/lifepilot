@@ -37,6 +37,24 @@ npm ci
 npm run dev
 ```
 
+For one-click local startup from a Windows terminal, run the repository's
+`start.bat`. It locates `backend`, `frontend`, and `backend\.venv` relative to
+the script, opens a Backend and Frontend terminal, and opens the dashboard at
+`http://127.0.0.1:3000/`:
+
+```powershell
+.\start.bat
+```
+
+By default the script uses `backend\data\lifepilot.db`. Set
+`LIFEPILOT_DB_PATH` before launching it when you want an isolated demo or
+acceptance database:
+
+```powershell
+$env:LIFEPILOT_DB_PATH = Join-Path $PWD 'backend\data\acceptance.db'
+.\start.bat
+```
+
 The frontend defaults to `http://127.0.0.1:8000/api`. Copy `frontend/.env.example` to `frontend/.env.local` to configure `NEXT_PUBLIC_API_URL`, then restart the frontend. Public environment variables must not contain secrets.
 
 The default database is `backend/data/lifepilot.db`, independent of the shell's working directory. Set `LIFEPILOT_DB_PATH` before starting the API to select a separate database, for example for a recording:
@@ -50,10 +68,11 @@ $env:LIFEPILOT_DB_PATH = Join-Path $PWD 'data/recording.db'
 
 ```powershell
 # From backend/
-.venv\Scripts\python.exe -m pytest -q
+.venv\Scripts\python.exe -m pytest tests\test_parser.py tests\test_api.py tests\test_scheduler.py -q
 
 # From frontend/
 npm test
+npx tsc --noEmit --incremental false
 npm run build
 ```
 
