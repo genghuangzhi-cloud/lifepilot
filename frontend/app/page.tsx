@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { persistTasks } from "./task-persistence";
+import { contextWindows } from "./planning-window";
 
 type Task = { id: string; title: string; description?: string; urgency: number; importance: number; estimated_minutes: number | null; remaining_minutes?: number | null; status: string; priority_score: number; deadline?: string | null; source_text?: string; kind?: "flexible_task" | "fixed_event" | "habit"; start_time?: string | null; end_time?: string | null; duration_source?: "explicit" | "estimated" | "default" | "unknown"; confidence?: number; dependency_ids?: string[]; assumptions?: string[] };
 type PlanItem = { task_id: string; start: string; end: string; state: string; reason: string };
@@ -28,6 +29,7 @@ export default function Home() {
   const persistedTasks = useRef(new Map<string, Task>());
   const busy = useRef(false);
   const [demoNow, setDemoNow] = useState<string | null>(null);
+  const [extractionContext, setExtractionContext] = useState<{ date: string | null; timezone: string } | null>(null);
   const saved = tasks.length > 0 && tasks.every((task) => persistedTasks.current.has(task.id));
   const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
   const planDiff = useMemo(() => {
@@ -70,6 +72,7 @@ export default function Home() {
       const result = await request("/tasks/extract", { method: "POST", body: JSON.stringify({ text, now: demoNow }) });
       persistedTasks.current.clear();
       setTasks(result.tasks);
+      setExtractionContext({ date: result.date_context ?? null, timezone: result.timezone });
       setAssumptions(result.assumptions || []);
       setPlan(null); setOriginalPlan(null); setExplanation("");
     });
@@ -94,8 +97,11 @@ export default function Home() {
     await runAction(async () => {
       const current = await persistCurrentTasks();
       const now = new Date(demoNow || Date.now());
+      const hasDatedTask = current.some((task) => task.start_time || task.deadline);
       const generated = await request("/plans/generate", { method: "POST", body: JSON.stringify({
         task_ids: current.map((task) => task.id), now: now.toISOString(),
+        timezone: extractionContext?.timezone,
+        windows: !hasDatedTask && extractionContext ? contextWindows(extractionContext.date, extractionContext.timezone) : undefined,
       }) });
       const ids = new Set(current.map((task) => task.id));
       const updated = (await request("/tasks") as Task[]).filter((task) => ids.has(task.id));
@@ -121,6 +127,7 @@ export default function Home() {
     if (busy.current) return;
     const morning = new Date(); morning.setHours(9, 0, 0, 0);
     setDemoNow(morning.toISOString());
+    setExtractionContext(null);
     persistedTasks.current.clear();
     setText(demoText); setTasks([]); setPlan(null); setOriginalPlan(null); setExplanation(""); setAssumptions([]); setError("");
   }

@@ -252,6 +252,81 @@ def test_extract_save_preserves_dependency_ids_for_future_plan(api):
     assert not plan["unscheduled"]
 
 
+@pytest.mark.parametrize("event_type", ["complete", "skip"])
+def test_undated_tomorrow_routine_keeps_explicit_window_on_replan(api, event_type):
+    client, _db_path, _main = api
+    now = "2026-09-30T17:36:00+08:00"
+    extracted = client.post(
+        "/api/tasks/extract",
+        json={"text": "Tomorrow, after dinner, take a shower.", "now": now, "timezone": "Asia/Shanghai"},
+    )
+    assert extracted.status_code == 200, extracted.text
+    payload = extracted.json()
+    assert payload["date_context"] == "2026-10-01"
+    assert payload["unparsed_actionable_spans"] == []
+    assert [task["title"] for task in payload["tasks"]] == ["Dinner", "Shower"]
+    saved = []
+    for task in payload["tasks"]:
+        assert task["start_time"] is None and task["deadline"] is None
+        response = client.post("/api/tasks", json=task)
+        assert response.status_code == 200, response.text
+        assert response.json()["id"] == task["id"]
+        saved.append(response.json())
+    dinner, shower = saved
+    assert dinner["dependency_ids"] == []
+    assert shower["dependency_ids"] == [dinner["id"]]
+    ids = {UUID(task["id"]) for task in saved}
+    assert len(ids) == 2
+
+    # The frontend sends an explicit 09:00-21:00 window in the extraction
+    # timezone while retaining the actual current time and unchanged tasks.
+    windows = [{"start": "2026-10-01T01:00:00.000Z", "end": "2026-10-01T13:00:00.000Z"}]
+    generated = client.post(
+        "/api/plans/generate",
+        json={"task_ids": [task["id"] for task in saved], "now": now, "timezone": payload["timezone"], "windows": windows},
+    )
+    assert generated.status_code == 200, generated.text
+    plan = generated.json()
+    assert plan["version"] == 1
+    assert plan["timezone"] == "Asia/Shanghai"
+    assert not plan["unscheduled"]
+    assert [item["task_id"] for item in plan["items"]] == [dinner["id"], shower["id"]]
+    assert datetime.fromisoformat(plan["items"][0]["end"]) <= datetime.fromisoformat(plan["items"][1]["start"])
+
+    response = client.post(
+        f"/api/plans/{plan['id']}/events",
+        json={"task_id": dinner["id"], "type": event_type, "at": now},
+    )
+    assert response.status_code == 200, response.text
+    revised = response.json()["plan"]
+    assert revised["version"] == 2
+    assert revised["windows"] == plan["windows"]
+    assert revised["task_ids"] == plan["task_ids"]
+    assert all(item["task_id"] != dinner["id"] for item in revised["items"])
+    if event_type == "complete":
+        assert [item["task_id"] for item in revised["items"]] == [shower["id"]]
+        assert not revised["unscheduled"]
+    else:
+        assert revised["items"] == []
+        assert revised["unscheduled"] == [{
+            "task_id": shower["id"], "reason": "dependency task is missing or could not be scheduled first",
+        }]
+    local_zone = timezone(timedelta(hours=8))
+    for snapshot in (plan, revised):
+        window = snapshot["windows"][0]
+        start, end = (datetime.fromisoformat(window[key]) for key in ("start", "end"))
+        assert start.astimezone(local_zone).isoformat() == "2026-10-01T09:00:00+08:00"
+        assert end.astimezone(local_zone).isoformat() == "2026-10-01T21:00:00+08:00"
+        for item in snapshot["items"]:
+            assert UUID(item["task_id"]) in ids
+            assert start <= datetime.fromisoformat(item["start"]) < datetime.fromisoformat(item["end"]) <= end
+        assert client.get(f"/api/plans/{snapshot['id']}").json() == snapshot
+    stored = {task["id"]: task for task in client.get("/api/tasks").json()}
+    assert stored[dinner["id"]]["status"] == ("completed" if event_type == "complete" else "skipped")
+    assert stored[shower["id"]]["dependency_ids"] == [dinner["id"]]
+    assert all(task["start_time"] is None and task["deadline"] is None for task in stored.values())
+
+
 def test_api_rejects_missing_members_and_invalid_inputs(api):
     client, _db_path, _main = api
     task = create_task(client, "member")
