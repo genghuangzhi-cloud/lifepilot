@@ -26,7 +26,8 @@
 - **Problem Statement Selected:** AI for Everyday Life
 - **Project Description:** See [project-description.md](project-description.md).
 - **GitHub Repository:** https://github.com/genghuangzhi-cloud/lifepilot
-- **Demo Video Link:** Add the hosted main recording URL after checking viewer access.
+- **Demo Video Link:** https://youtu.be/HzrSw1hO-cM
+- **Supplementary Skip Dependency Demo:** https://youtu.be/eyCcCkfx_iY (linked from README; use the main video in the submission's video field).
 - **Live Deployment Link:** Leave blank unless a public application is available; localhost is not a public deployment.
 
 ## Recording outline

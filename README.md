@@ -6,7 +6,12 @@ When a task takes longer than expected, the rest of the day needs to change too.
 
 The current version uses **rule-based offline extraction and deterministic scheduling**. No language model is connected yet. The demo runs locally without an AI API key.
 
-Repository: [genghuangzhi-cloud/lifepilot](https://github.com/genghuangzhi-cloud/lifepilot). A hosted demo video link will be added after upload; no public application deployment is currently available.
+Repository: [genghuangzhi-cloud/lifepilot](https://github.com/genghuangzhi-cloud/lifepilot). No public application deployment is currently available.
+
+## Watch the demos
+
+- [Main demo — about 3 minutes](https://youtu.be/HzrSw1hO-cM): task extraction, tomorrow planning, additional-work replanning, and completing a prerequisite.
+- [Skip dependency demo — about 46 seconds](https://youtu.be/eyCcCkfx_iY): skipping Dinner leaves Shower blocked with an explicit dependency reason.
 
 ## Try the demo
 

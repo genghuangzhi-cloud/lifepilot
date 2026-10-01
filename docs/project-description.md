@@ -25,7 +25,8 @@ LifePilot is a local personal-planning prototype that creates prioritized timeli
 ## Submission assets
 
 - **GitHub Repository:** https://github.com/genghuangzhi-cloud/lifepilot
-- **Demo Video:** Add the actual recording URL after uploading and checking viewer access.
+- **Demo Video:** https://youtu.be/HzrSw1hO-cM
+- **Supplementary Skip Dependency Demo:** https://youtu.be/eyCcCkfx_iY
 - **Live Demo:** No public deployment is claimed. Leave this optional field empty until a working public deployment is available.
 
 Do not paste the asset instructions above into URL fields. Re-check the organizer's current field limits and submission requirements before uploading.
