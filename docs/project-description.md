@@ -12,7 +12,9 @@ LifePilot turns a small set of tasks into a prioritized timeline and revises tha
 
 The scheduling engine uses deterministic Python rules. Its priority score combines urgency, importance, deadline information when supplied, dependency impact, and effort. It attempts to place work within the supplied availability and reports unscheduled work. A FastAPI backend stores tasks, plans, and execution events in SQLite; a Next.js dashboard provides the interaction and comparison views.
 
-The current prototype uses **rule-based offline extraction, with no LLM integration yet**. The featured demo scenario uses predefined task estimates and priorities. Other input receives basic text splitting and default estimates; the prototype does not infer reliable deadlines from natural language. This makes the demonstrated behavior reproducible without an AI API key, while keeping extraction replaceable by a structured language-model adapter in a future version.
+The current prototype uses **rule-based offline extraction, with no LLM integration yet**. It handles tested action phrases, explicit times and durations, tomorrow date context, and before/after dependencies. Missing durations use default estimates, and fixed events with insufficient timing information remain under Needs attention. This makes the demonstrated behavior reproducible without an AI API key; unfamiliar language still requires review.
+
+Completed prerequisites allow dependent tasks to proceed, while skipped prerequisites keep them blocked. Replanning retains the selected plan's saved availability, including future-date windows. Local verification at implementation checkpoint `c5aeabf` passed 69 backend tests, 7 frontend tests, TypeScript checks, and a production build, alongside manual browser acceptance of the key flows.
 
 LifePilot's focus is the visible execution loop: review a plan, report what changed, and inspect the revised result. The current submission demonstrates that loop locally. Public deployment, account management, calendar integration, and a general-purpose AI extractor are future work.
 
@@ -22,7 +24,7 @@ LifePilot is a local personal-planning prototype that creates prioritized timeli
 
 ## Submission assets
 
-- **GitHub Repository:** Add the actual repository URL after publishing and checking public access.
+- **GitHub Repository:** https://github.com/genghuangzhi-cloud/lifepilot
 - **Demo Video:** Add the actual recording URL after uploading and checking viewer access.
 - **Live Demo:** No public deployment is claimed. Leave this optional field empty until a working public deployment is available.
 

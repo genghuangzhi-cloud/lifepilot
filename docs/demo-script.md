@@ -1,13 +1,15 @@
 # LifePilot — Demo Script
 
-**Target duration:** 90–120 seconds  
-**Language:** English  
-**Main demonstration:** Original plan → additional work → revised plan
+**Suggested duration:** About 3 minutes, plus an optional 30–45 second Skip example
+
+**Language:** English
+
+**Main demonstration:** Extract → Save → tomorrow plan → additional work → revised plan → completed prerequisite
 
 ## Before recording
 
 - Run the backend and frontend, then open `http://127.0.0.1:3000/`.
-- Use a disposable demo instance or a clean demo database. Preserve existing personal data separately; do not delete it to prepare the recording.
+- Start a fresh inbox for each example. An isolated demo database is optional; do not delete existing data to prepare the recording.
 - Verify the full flow once with the current build. The effort-change button should read **Needs 60m more**.
 - Make sure the scheduling window has room for the scenario and its extra hour. Check the displayed clock and timeline times before recording.
 - Keep the task inbox, timeline, plan version, and comparison panel readable. Avoid showing account details, keys, unrelated browser tabs, or console output.
@@ -17,13 +19,13 @@
 
 | Time | Screen action | Spoken narration |
 | --- | --- | --- |
-| 0–12 s | Start on the empty dashboard with the LifePilot name visible. | “Everyday plans change when work takes longer than expected. LifePilot helps you see what that change means for the rest of your tasks.” |
-| 12–27 s | Click **Load demo scenario**, pause over the input, then click **Extract tasks**. | “Here is a familiar scenario: exam review, an assignment, shopping, and an important email. This prototype uses a rule-based offline extractor. It has no LLM connected yet.” |
-| 27–43 s | Show the task inbox, estimates, priority scores, and assumptions. | “The demo provides predefined estimates and priorities for review. General input uses simpler defaults, and natural-language deadlines are not inferred reliably. The assumptions are visible before planning.” |
-| 43–59 s | Click **Generate adaptive plan** and show version 1. | “The deterministic scheduler turns these tasks into a timeline. It considers urgency, importance, effort, and any supplied deadline or dependency information. Work that cannot fit is reported for attention.” |
-| 59–77 s | On the first scheduled task, click **Needs 60m more**. | “Suppose this task needs another hour of work. This control adds sixty minutes to the task's remaining effort. LifePilot then recalculates the schedule.” |
-| 77–98 s | Show the revised version, later task times, **What changed**, and the explanation panel. | “The plan now has a new version. Here we can inspect the revised times and compare changed start times with the original plan. Completing or skipping a task also triggers replanning.” |
-| 98–113 s | End with the timeline and comparison panel visible. | “Tasks, plans, and execution events are stored locally in SQLite. LifePilot makes scheduling trade-offs visible and helps you adapt your plan. This is the current local prototype; language-model extraction and public deployment are future work.” |
+| 0–15 s | Start on the dashboard with the LifePilot name visible. | “Everyday tasks pile up, and when one takes longer than expected, the rest of the plan changes too. LifePilot adapts a timeline as you report progress.” |
+| 15–35 s | Click **Load demo scenario**, show the input, then **Extract tasks**. | “Here is an exam tomorrow, revision, an assignment, shopping, and an email. This prototype uses local rule-based extraction without a connected language model.” |
+| 35–55 s | Show five tasks and the assumptions. | “Missing durations use default estimates. The exam has a date but no start time, so it needs confirmation instead of receiving an invented time.” |
+| 55–78 s | Click **Save tasks**, then **Generate adaptive plan**. | “Four tasks appear on tomorrow's timeline. The exam remains under Needs attention, so missing information stays visible.” |
+| 78–112 s | Click **Needs 60m more** on Review calculus chapters; show v2 and **What changed**. | “Revision needs another hour of remaining work. LifePilot recalculates the plan and explains the changed times.” |
+| 112–160 s | Extract and save the Dinner/Shower example below, generate v1, then **Complete Dinner**. | “Dinner is scheduled first. Once it is complete, it is not scheduled again, and Shower remains eligible because its prerequisite is satisfied.” |
+| 160–180 s | End with the revised timeline and comparison panel visible. | “Tasks, plans, and progress events are stored locally in SQLite. LifePilot makes plan changes and unscheduled work visible. Richer extraction and calendar integration are future improvements.” |
 
 The timings are guides. Let the requests finish and show the actual result; do not claim an outcome that is absent from the screen. If the plan reports insufficient capacity, briefly point to that message instead of saying every task fits.
 
@@ -33,18 +35,30 @@ The timings are guides. Let the requests finish and show the actual result; do n
 Exam tomorrow: review calculus chapters and submit English assignment. Buy shampoo and reply to the important email.
 ```
 
-The predefined extracted task titles are:
+The extracted task titles are:
 
-- Review exam topics
+- Exam
+- Review calculus chapters
 - Submit English assignment
-- Buy household supplies
+- Buy shampoo
 - Reply to important email
 
-“Exam tomorrow” is part of the scenario text, not evidence that the current extractor has parsed an exam deadline.
+The exam's date context is recognized, but its start time is unknown. Expect five extracted tasks, four scheduled tasks, and Exam under Needs attention. Tomorrow is relative to the extraction clock; do not hard-code a date into the narration.
+
+## Dependency example
+
+```text
+Tomorrow, after dinner, take a shower.
+```
+
+Extract, save, and generate a new plan. Completing Dinner satisfies Shower's prerequisite; the revised plan contains Shower and records one completed task. The example specifies a date and order, not a dinner time; 09:00 comes from the default availability window.
+
+For the optional Skip clip, extract and save a fresh batch, generate v1, then skip Dinner. Wait for v2 before explaining that Shower is blocked. The empty timeline and dependency reason mean no task is eligible, not that saved tasks were deleted.
 
 ## Capture and upload checks
 
 - Record the working interface and audible narration at a readable resolution.
 - Rewatch the exported video to check timing, text visibility, audio, and the visible replan result.
 - Upload only after the recording is ready. Verify the resulting link works for viewers who are not signed in to the owner's account.
-- Check the competition's current video requirements before submitting. The 90–120 second length is a project recommendation, not a verified organizer requirement.
+- Keep captions short and place them clear of task cards, the version number, and What changed.
+- Check the competition's current video requirements before submitting. The suggested duration and English narration are production choices, not verified organizer requirements.

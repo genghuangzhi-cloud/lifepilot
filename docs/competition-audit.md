@@ -3,17 +3,17 @@
 ## Confirmed from the Unstop page
 
 - HackNowa Global Hackathon 2026 is online.
-- Individual participation is allowed; teams are also described on the page.
+- The page text supplied on 1 October 2026 states individual participation only.
 - The format is a single-round hackathon based on one of five problem statements.
 - The page allows any suitable technology, programming language, framework, or AI tools.
 - The selected direction is **AI for Everyday Life**.
-- Final submission asks for a project description, GitHub repository, demo video, and live demo link if available.
+- The supplied final submission form requires a project title, selected problem statement, project description, GitHub repository, and demo video link. Live deployment is optional.
 - The page lists participation certificates for all participants and certificates plus a one-month online internship for the top three.
-- The page shows registration as successful for this account on 2026-09-14.
+- The supplied page shows the participant as registered.
 
 ## Dates to re-check before submission
 
-The page displays inconsistent registration dates in different sections. The top banner shows 2026-09-30 23:00 (+05:30), while the dates section shows 2026-10-01. The submission stage is shown as 2026-10-01 through 2026-10-11. Treat the Unstop submission screen and organizer announcements as the final source before uploading.
+The page displays inconsistent dates in different sections. The submission stage ends at 11 Oct 26, 02:15 AM, while the dates section lists 02:21 AM; the supplied text does not establish a consistent timezone. Treat the actual submission countdown and organizer announcements as the final source and submit early.
 
 ## Still unverified
 
